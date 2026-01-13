@@ -1,0 +1,18 @@
+<div class="connection-status" [class]="getStateClass()">
+  <div class="status-indicator">
+    <span class="status-dot"></span>
+    <span class="status-text">{{ getStateText() }}</span>
+  </div>
+  
+  <div class="status-details" *ngIf="connectionInfo.connectionId">
+    <small>ID: {{ connectionInfo.connectionId | slice:0:8 }}...</small>
+  </div>
+  
+  <button 
+    class="sync-button" 
+    *ngIf="connectionInfo.state === ConnectionState.Connected"
+    (click)="manualReconnect()"
+    title="Force sync appointments">
+    ↻ Sync
+  </button>
+</div>
