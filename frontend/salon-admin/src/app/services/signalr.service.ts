@@ -244,51 +244,53 @@ export class SignalRService implements OnDestroy {
     });
   }
 
-  /**
-   * Handle when tab becomes visible again
-   */
-  private async handleVisibilityRestore(): Promise<void> {
-    console.log('[SignalR] Handling visibility restore...');
+ /**
+ * Handle when tab becomes visible again
+ */
+private async handleVisibilityRestore(): Promise<void> {
+  console.log('[SignalR] Handling visibility restore...');
 
-    if (!this.hubConnection) {
-      console.log('[SignalR] No connection exists, starting new connection');
-      await this.startConnection();
-      return;
-    }
+  if (!this.hubConnection) {
+    console.log('[SignalR] No connection exists, starting new connection');
+    await this.startConnection();
+    return;
+  }
 
-    // Check connection state
-    const state = this.hubConnection.state;
-    console.log(`[SignalR] Current connection state: ${state}`);
+  const state = this.hubConnection.state;
+  console.log(`[SignalR] Current connection state: ${state}`);
 
-    if (state === signalR.HubConnectionState.Disconnected) {
-      // Connection was lost while in background
-      console.log('[SignalR] Connection lost while in background, reconnecting...');
-      try {
-        await this.hubConnection.start();
-        const syncTime = this.lastSyncTime;
-        this.lastSyncTime = new Date();
-        
-        this.updateState(ConnectionState.Connected, {
-          connectionId: this.hubConnection.connectionId || undefined,
-          lastConnected: new Date()
-        });
-
-        // Trigger sync
-        this.syncRequired$.next(syncTime);
-      } catch (err) {
-        console.error('[SignalR] Manual reconnection failed:', err);
-      }
-    } else if (state === signalR.HubConnectionState.Connected) {
-      // Connection still alive - still trigger sync to be safe
-      console.log('[SignalR] Connection still alive, triggering sync anyway');
+  if (state === signalR.HubConnectionState.Disconnected) {
+    console.log('[SignalR] Connection lost while in background, reconnecting...');
+    try {
+      await this.hubConnection.start();
       const syncTime = this.lastSyncTime;
       this.lastSyncTime = new Date();
-      this.syncRequired$.next(syncTime);
       
-      // Also ping to verify connection
-      this.ping();
+      this.updateState(ConnectionState.Connected, {
+        connectionId: this.hubConnection.connectionId || undefined,
+        lastConnected: new Date()
+      });
+
+      // FIXED: Wrap in ngZone
+      this.ngZone.run(() => {
+        this.syncRequired$.next(syncTime);
+      });
+    } catch (err) {
+      console.error('[SignalR] Manual reconnection failed:', err);
     }
+  } else if (state === signalR.HubConnectionState.Connected) {
+    console.log('[SignalR] Connection still alive, triggering sync anyway');
+    const syncTime = this.lastSyncTime;
+    this.lastSyncTime = new Date();
+    
+    // FIXED: Wrap in ngZone
+    this.ngZone.run(() => {
+      this.syncRequired$.next(syncTime);
+    });
+    
+    this.ping();
   }
+}
 
   /**
    * Handle network restore

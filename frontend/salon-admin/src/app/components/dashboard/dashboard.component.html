@@ -1,5 +1,4 @@
 <div class="dashboard">
-  <!-- Header -->
   <header class="dashboard-header">
     <div class="header-left">
       <h1>🏪 Salon Admin Dashboard</h1>
@@ -10,19 +9,16 @@
     </div>
   </header>
 
-  <!-- Notification Banner -->
-  <div class="notification" *ngIf="notification" [@fadeInOut]>
+  <div class="notification" *ngIf="notification">
     <span class="notification-icon">🔔</span>
     {{ notification }}
   </div>
 
-  <!-- Sync Status Bar -->
   <div class="sync-bar" *ngIf="isSyncing">
     <div class="sync-progress"></div>
     <span>Syncing appointments...</span>
   </div>
 
-  <!-- Stats Bar -->
   <div class="stats-bar">
     <div class="stat">
       <span class="stat-value">{{ appointments.length }}</span>
@@ -32,96 +28,43 @@
       <span class="stat-value">{{ lastUpdated | date:'HH:mm:ss' }}</span>
       <span class="stat-label">Last Updated</span>
     </div>
-    <button class="refresh-button" (click)="refresh()" [disabled]="isSyncing">
-      🔄 Refresh
-    </button>
+    <button class="refresh-button" (click)="refresh()" [disabled]="isSyncing">🔄 Refresh</button>
   </div>
 
-  <!-- Appointments List -->
   <main class="appointments-container">
     <div class="appointments-header">
       <h2>📅 Recent Bookings</h2>
-      <span class="live-indicator">
-        <span class="live-dot"></span>
-        LIVE
-      </span>
+      <span class="live-indicator"><span class="live-dot"></span> LIVE</span>
     </div>
 
-    <!-- Empty State -->
     <div class="empty-state" *ngIf="appointments.length === 0 && !isSyncing">
       <span class="empty-icon">📭</span>
       <p>No appointments yet</p>
-      <small>New bookings will appear here in real-time</small>
     </div>
 
-    <!-- Loading State -->
-    <div class="loading-state" *ngIf="appointments.length === 0 && isSyncing">
-      <div class="loader"></div>
-      <p>Loading appointments...</p>
-    </div>
-
-    <!-- Appointments Grid -->
     <div class="appointments-grid" *ngIf="appointments.length > 0">
-      <div 
-        class="appointment-card" 
-        *ngFor="let apt of appointments; trackBy: trackByAppointment"
-        [class.new-highlight]="apt.createdAt === appointments[0]?.createdAt">
-        
+      <div class="appointment-card" *ngFor="let apt of appointments; trackBy: trackByAppointment">
         <div class="card-header">
           <span class="customer-name">{{ apt.customerName }}</span>
-          <span class="status-badge" [class]="getStatusClass(apt.status)">
-            {{ apt.status }}
-          </span>
+          <span class="status-badge" [class]="getStatusClass(apt.status)">{{ apt.status }}</span>
         </div>
-
         <div class="card-body">
           <div class="service-info">
             <span class="service-type">✂️ {{ apt.serviceType }}</span>
             <span class="duration">{{ apt.durationMinutes }} min</span>
           </div>
-          
           <div class="appointment-details">
-            <div class="detail">
-              <span class="label">📞</span>
-              <span class="value">{{ apt.customerPhone }}</span>
-            </div>
-            <div class="detail">
-              <span class="label">👤</span>
-              <span class="value">{{ apt.stylistName }}</span>
-            </div>
-            <div class="detail">
-              <span class="label">📅</span>
-              <span class="value">{{ formatDate(apt.appointmentTime) }}</span>
-            </div>
-            <div class="detail">
-              <span class="label">💰</span>
-              <span class="value">\${{ apt.price | number:'1.2-2' }}</span>
-            </div>
+            <div class="detail"><span class="label">📞</span> {{ apt.customerPhone }}</div>
+            <div class="detail"><span class="label">👤</span> {{ apt.stylistName }}</div>
+            <div class="detail"><span class="label">📅</span> {{ formatDate(apt.appointmentTime) }}</div>
+            <div class="detail"><span class="label">💰</span> ${{ apt.price | number:'1.2-2' }}</div>
           </div>
-
-          <div class="notes" *ngIf="apt.notes">
-            <span class="label">📝</span>
-            <span class="value">{{ apt.notes }}</span>
-          </div>
+          <div class="notes" *ngIf="apt.notes"><span class="label">📝</span> {{ apt.notes }}</div>
         </div>
-
         <div class="card-footer">
-          <small class="created-at">Created: {{ formatTimeAgo(apt.createdAt) }}</small>
+          <small>Created: {{ formatTimeAgo(apt.createdAt) }}</small>
         </div>
       </div>
     </div>
   </main>
-
-  <!-- Testing Panel (for lab purposes) -->
-  <aside class="testing-panel">
-    <h3>🧪 Lab Testing Info</h3>
-    <p>To test connection recovery:</p>
-    <ol>
-      <li>Switch to another browser tab</li>
-      <li>Wait 30+ seconds</li>
-      <li>Return to this tab</li>
-      <li>Observe: Missed appointments should sync automatically</li>
-    </ol>
-    <p class="tip">💡 Watch the connection indicator and console logs</p>
-  </aside>
 </div>
