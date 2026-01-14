@@ -1,35 +1,43 @@
-
 using Microsoft.AspNetCore.SignalR;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add SignalR service
 builder.Services.AddSignalR();
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
 
 var app = builder.Build();
 
+app.UseCors();
 
-// Simple list to store appointments (in memory)
 var appointments = new List<Appointment>();
 
-// GET - return all appointments
 app.MapGet("/appointments", () => appointments);
-// POST - add a new appointment
-app.MapPost("/appointments", (Appointment apt) => 
+
+app.MapPost("/appointments", async (Appointment apt, IHubContext<AppointmentHub> hub) => 
 {
     apt.Id = Guid.NewGuid();
     apt.CreatedAt = DateTime.UtcNow;
     appointments.Add(apt);
-    // 🔥 Broadcast to ALL connected clients instantly!
+    
     await hub.Clients.All.SendAsync("NewAppointment", apt);
+    
     return apt;
 });
 
-// Map the SignalR hub endpoint
 app.MapHub<AppointmentHub>("/hub");
 
 app.Run();
 
-// Define what an Appointment looks like
 record Appointment
 {
     public Guid Id { get; set; }
@@ -38,7 +46,6 @@ record Appointment
     public DateTime CreatedAt { get; set; }
 }
 
-// SignalR Hub - clients connect here
 public class AppointmentHub : Hub
 {
     public override async Task OnConnectedAsync()
